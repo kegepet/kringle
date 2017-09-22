@@ -205,7 +205,7 @@ function buildResponse(prot, req, res, code, host = {}, filter = {}) {
               if (rg) {
                 var s = +rg[1];
                 var e = (rg[2] !== '') ? +rg[2] : data.length - 1;
-                if ((s >= 0) && (e >= s) && (e <= data.length)) {
+                if ((s >= 0) && (e >= s) && (e < data.length)) {
                   code = 206;
                   hdrs['Content-Range'] = 'bytes ' + s + '-' + e + '/' + data.length;
                   data = data.slice(s, e + 1);
