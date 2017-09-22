@@ -30,8 +30,8 @@ for (var i = 0; i < config.hosts.length; i++) {
 
 
 function getCPT(type, cpt) {
-    
-    for (var i = 0; i < cpt.length; i++) { 
+
+    for (var i = 0; i < cpt.length; i++) {
         for (var c = 0; c < cpt[i]['types'].length; c++) {
             if (type.indexOf(cpt[i]['types'][c])+1) return cpt[i].cache_control;
         }
@@ -42,10 +42,10 @@ function getCPT(type, cpt) {
 
 // status is an object with two possible properties: code and message
 function serve(res, status, data, hdrs, host, filter) {
-    
+
     hdrs['Content-Type'] = hdrs['Content-Type'] || 'text/html; charset=UTF-8';
     hdrs['Content-Length'] = data.length;
-    
+
     // client caching
     var cpt; // cache per type
     if (status.code == 500);
@@ -56,7 +56,7 @@ function serve(res, status, data, hdrs, host, filter) {
     else if (host && host.cache_control) hdrs['Cache-Control'] = host.cache_control;
     else if (config.cache_per_type && config.cache_per_type.length && (cpt = getCPT(hdrs['Content-Type'], config.cache_per_type))) hdrs['Cache-Control'] = cpt;
     else if (config.cache_control) hdrs['Cache-Control'] = config.cache_control;
-    
+
     // custom headers
     if (filter.custom_headers) {
         for (var p in filter.custom_headers) hdrs[p] = filter.custom_headers[p];
@@ -67,12 +67,14 @@ function serve(res, status, data, hdrs, host, filter) {
     else if (config.custom_headers) {
         for (var p in config.custom_headers) hdrs[p] = config.custom_headers[p];
     }
-    
+
     if (status.code == 304) {
         delete hdrs['Content-Type'];
         delete hdrs['Content-Length'];
     }
-    
+
+    // accept range requests
+    hdrs['Accept-Ranges'] = 'bytes';
     // finish up and serve
     hdrs['Server'] = config.server_name;
     status.message ? res.writeHead(status.code, status.message, hdrs) : res.writeHead(status.code, hdrs);
@@ -85,7 +87,7 @@ function serve(res, status, data, hdrs, host, filter) {
 
 // this is a utility function to prevent repetition in buildResponse
 function getCustomStatus(prop, code, host, filter) {
-    
+
     if (filter && filter.custom_statuses &&
     filter.custom_statuses[code] &&
     filter.custom_statuses[code][prop]) {
@@ -106,7 +108,7 @@ function getCustomStatus(prop, code, host, filter) {
 
 
 function resolveType(file, host, filter) {
-    
+
     var types = filter.types || host.types || config.types;
     var reqExt = file.match(/[^\.]+$/i)[0];
     for (var i = 0; i < types.length; i++) {
@@ -117,11 +119,11 @@ function resolveType(file, host, filter) {
 
 
 function buildResponse(prot, req, res, code, host = {}, filter = {}) {
-    
+
     var hdrs = {};
-    
+
     // redirects and authentication
-    if (/301|302|303|307/.test(String(code))) { 
+    if (/301|302|303|307/.test(String(code))) {
         hdrs['Location'] = function () {
             var reqLocPtrn = new RegExp(filter.req_param_value);
             var curLoc;
@@ -134,7 +136,7 @@ function buildResponse(prot, req, res, code, host = {}, filter = {}) {
     else if (code == 401) {
         hdrs['WWW-Authenticate'] = 'Basic Realm="Secure Area"';
     }
-    
+
     // determine filesystem path to either requested resource or custom status html file
     var file = (function () {
         if (!code) {
@@ -142,13 +144,13 @@ function buildResponse(prot, req, res, code, host = {}, filter = {}) {
         }
         return getCustomStatus('to_html', code, host, filter);
     })();
-    
+
     // if there is no file, then there must be an error condition; serve with default html
     if (!file) {
         serve(res, {code: code, message: getCustomStatus('message', code, host, filter)}, getCustomStatus('html', code, host, filter), hdrs, host, filter);
         return;
     }
-    
+
     fs.stat(file, function (error, stats) {
         if (code && (error || !stats.isFile())) {
             serve(res, {code: code, message: getCustomStatus('message', code, host, filter)}, getCustomStatus('html', code, host, filter), hdrs, host, filter);
@@ -163,19 +165,20 @@ function buildResponse(prot, req, res, code, host = {}, filter = {}) {
                 serve(res, {code: 301, message: ''}, getCustomStatus('html', 301, host, filter), {
                     'Location': prot + "://" + req.headers['host'] + req.url.replace(/([^\/])($|\?)/, '$1/$2')
                 }, host, filter);
-                return;            
+                return;
             }
             file = file + (host.default_file || config.default_file);
         }
-        
+
         if (!code) { // because it wouldn't make sense to send a Last-Modified for any status other than 200
             fs.stat(file, function (error, stats) {
                 if (error) {
-                    serve(res, {code: 500, message: ''}, getCustomStatus('html', 500, host, filter), {}, host, filter);
+                    code = error.code == 'ENOENT' ? 404 : 500;
+                    serve(res, {code: code, message: getCustomStatus('message', code, host, filter)}, getCustomStatus('html', code, host, filter), {}, host, filter);
                     return;
                 }
                 var mTime = new Date(stats.mtime);
-                if (req.headers['if-modified-since'] && 
+                if (req.headers['if-modified-since'] &&
                 (mTime.getTime() == (new Date(req.headers['if-modified-since'])).getTime())) {
                     serve(res, {code: 304, message: ''}, '', {'Content-Type': resolveType(file, host, filter)}, host, filter);
                     return;
@@ -183,7 +186,8 @@ function buildResponse(prot, req, res, code, host = {}, filter = {}) {
                 hdrs['Last-Modified'] = mTime.toUTCString();
             });
         }
-        
+
+
         fs.readFile(file, function (error, data) {
             if (error && code) {
                 serve(res, {code: code, message: getCustomStatus('message', code, host, filter)}, getCustomStatus('html', code, host, filter), hdrs, host, filter);
@@ -195,6 +199,29 @@ function buildResponse(prot, req, res, code, host = {}, filter = {}) {
                 return;
             }
             if (!code) hdrs['Content-Type'] = resolveType(file, host, filter);
+            // content ranges
+            if (req.headers['range']) {
+              var rg = req.headers['range'].match(/bytes=(\d+)-(\d*)/i);
+              if (rg) {
+                var s = +rg[1];
+                var e = (rg[2] !== '') ? +rg[2] : data.length - 1;
+                if ((s > 0) && (e >= s) && (e <= data.length)) {
+                  code = 206;
+                  hdrs['Content-Range'] = 'bytes ' + s + '-' + e + '/' + data.length;
+                  data = data.slice(s, e + 1);
+                }
+                /* 416s may not be a good idea, since, apparently, some clients
+                   continuously hit the server up for the same invalid range
+                   until it's satisfied. In this case, many servers will just
+                   ignore the range request and serve the entire resource with
+                   a 200. kringle abides.
+                 */
+                //else {
+                //  code = 416;
+                //  hdrs['Content-Range'] = '*/' + data.length;
+                //}
+              }
+            }
             serve(res, {code: (code || 200), message: getCustomStatus('message', (code || 200), host, filter)}, data, hdrs, host, filter);
         });
     });
@@ -206,13 +233,13 @@ function buildResponse(prot, req, res, code, host = {}, filter = {}) {
 function parseRequest(prot, req, res) {
 
     var host;
-    
+
     // check that there's a host field and that it's not empty
     if (!req.headers['host']) {
         buildResponse(prot, req, res, 400);
         return;
     }
-    
+
     var hostNoPort = req.headers['host'].replace(/\:\d+$/, '');
     // identify host
     for (var h, i = 0; h = config.hosts[i]; i++) {
@@ -247,12 +274,12 @@ function parseRequest(prot, req, res) {
             break;
         }
     }
-    
+
     if (filter.action == 'extension') {
         // for the future
         return;
     }
-    
+
     if ((!isNaN(+filter.action)) && (filter.action == 401)) {
         var creds = req.headers['authorization'];
         if (creds) {
@@ -264,7 +291,7 @@ function parseRequest(prot, req, res) {
             }
         }
     }
-      
+
     buildResponse(prot, req, res, +(filter.action || 0), host, filter);
 }
 

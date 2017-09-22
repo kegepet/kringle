@@ -5,6 +5,7 @@
     "cache_control": "public, max-age=86400",
     "custom_headers": {},
     "default_file": "index.html",
+    "default_type": "application/octet-stream",
     "types": [
         ["txt", "text/plain"],
         ["html htm", "text/html; charset=UTF-8"],
@@ -65,7 +66,7 @@
             ],
             "filters": [
                 {
-                    "comment": "'req_param' can be 'url' or any http request header (case-insensitive)",
+                    "#comment": "'req_param' can be 'url' or any http request header (case-insensitive)",
                     "req_param_key": "url",
                     "req_param_value": "^http://www\\.(example\\.com.*)",
                     "action": "301",
