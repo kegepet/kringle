@@ -150,7 +150,7 @@ function buildResponse(prot, req, res, code, host = {}, filter = {}) {
         serve(res, {code: code, message: getCustomStatus('message', code, host, filter)}, getCustomStatus('html', code, host, filter), hdrs, host, filter);
         return;
     }
-
+    // first, check if resource exists and if it's a directory
     fs.stat(file, function (error, stats) {
         if (code && (error || !stats.isFile())) {
             serve(res, {code: code, message: getCustomStatus('message', code, host, filter)}, getCustomStatus('html', code, host, filter), hdrs, host, filter);
@@ -169,7 +169,8 @@ function buildResponse(prot, req, res, code, host = {}, filter = {}) {
             }
             file = file + (host.default_file || config.default_file);
         }
-
+        // now that we are certain to have the path to the requested file,
+        // get meta info and serve a 304 if possible
         if (!code) { // because it wouldn't make sense to send a Last-Modified for any status other than 200
             fs.stat(file, function (error, stats) {
                 if (error) {
@@ -199,22 +200,19 @@ function buildResponse(prot, req, res, code, host = {}, filter = {}) {
                 return;
             }
             if (!code) hdrs['Content-Type'] = resolveType(file, host, filter);
-            // content ranges
+            // partial content
             if (req.headers['range']) {
               var rg = req.headers['range'].match(/bytes=(\d+)-(\d*)/i);
               if (rg) {
                 var s = +rg[1];
                 var e = (rg[2] !== '') ? +rg[2] : data.length - 1;
-                if ((s >= 0) && (e >= s) && (e < data.length)) {
+                if ((s >= 0) && (s <= e) && (e < data.length)) {
                   code = 206;
                   hdrs['Content-Range'] = 'bytes ' + s + '-' + e + '/' + data.length;
                   data = data.slice(s, e + 1);
                 }
-                /* 416s may not be a good idea, since, apparently, some clients
-                   continuously hit the server up for the same invalid range
-                   until it's satisfied. In this case, many servers will just
-                   ignore the range request and serve the entire resource with
-                   a 200. kringle abides.
+                /* 416s may cause suspect clients to send repeated invalid range requests.
+                   Send 200 with entire content body instead to prevent this.
                  */
                 //else {
                 //  code = 416;
