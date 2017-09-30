@@ -127,9 +127,9 @@ function buildResponse(prot, req, res, code, host = {}, filter = {}) {
         hdrs['Location'] = function () {
             var reqLocPtrn = new RegExp(filter.req_param_value);
             var curLoc;
-            if (reqLocPtrn.test(curLoc = prot + '://' + req.headers['host'] + req.url));
-            else if (reqLocPtrn.test(curLoc = req.headers['host'] + req.url));
-            else if (reqLocPtrn.test(curLoc = req.url));
+            reqLocPtrn.test(curLoc = prot + '://' + req.headers['host'] + req.url) ||
+            reqLocPtrn.test(curLoc = req.headers['host'] + req.url) ||
+            reqLocPtrn.test(curLoc = req.url);
             return curLoc.replace(reqLocPtrn, filter.loc_to);
         }();
     }
