@@ -238,7 +238,7 @@ function parseRequest(prot, req, res) {
         return;
     }
 
-    var hostNoPort = req.headers['host'].replace(/\:\d+$/, '');
+    var hostNoPort = req.headers['host'].replace(/:\d+$/, '');
     // identify host
     for (var h, i = 0; h = config.hosts[i]; i++) {
         // strip out the port number before attempting the search
