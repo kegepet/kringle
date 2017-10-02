@@ -112,7 +112,7 @@ function resolveType(file, host, filter) {
     var types = filter.types || host.types || config.types;
     var reqExt = file.match(/[^\.]+$/i)[0];
     for (var i = 0; i < types.length; i++) {
-        if (new RegExp('(^|\\s)' + reqExt + '($|\\s)', 'i').test(types[i][0])) return types[i][1];
+        if (new RegExp('(^| )' + reqExt + '($| )', 'i').test(types[i][0])) return types[i][1];
     }
     return filter.default_type || host.default_type || config.default_type || 'application/octet-stream';
 }
@@ -281,7 +281,7 @@ function parseRequest(prot, req, res) {
     if ((!isNaN(+filter.action)) && (filter.action == 401)) {
         var creds = req.headers['authorization'];
         if (creds) {
-            creds = creds.replace(/^Basic\s+/i, ''); // will take the base64 credential string
+            creds = creds.replace(/^Basic +/i, ''); // will take the base64 credential string
             creds = (new Buffer(creds, 'base64')).toString().split(':');
             if ((creds[0] == filter.username) && (creds[1] == filter.password)) { // AUTHORIZED!
                 buildResponse(prot, req, res, 0, host, filter);
