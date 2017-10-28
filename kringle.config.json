@@ -87,6 +87,18 @@
                     "loc_to": "http://www.$1"
                 }
             ]
+        },
+
+        {
+            "#comment": "this is a catch-all for any host that doesn't match the above; it will generate a 477 custom status",
+            "host": ".",
+            "filters": {
+                "req_param_key": "url",
+                "req_param_value": ".",
+                "#comment": "the 477 is a custom kringle status, meaning 'No Such Host'",
+                "action": "477"
+            }
+
         }
 
     ]

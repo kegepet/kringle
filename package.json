@@ -1,0 +1,25 @@
+{
+  "name": "kringle",
+  "version": "1.0.0",
+  "description": "Basic web server with support for multiple hosts, security, and extensions.",
+  "bin": "./kringle",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/kegepet/kringle.git"
+  },
+  "author": {
+    "name": "Keith Petrino",
+    "email": "kepe@kepe.org"
+  },
+  "license": {
+    "type": "MIT",
+    "url": "https://github.com/kegepet/kringle/blob/master/LICENSE"
+  },
+  "bugs": {
+    "url": "https://github.com/kegepet/kringle/issues"
+  },
+  "homepage": "https://github.com/kegepet/kringle#readme"
+}

@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 process.title = function () {
     var t = process.argv.indexOf('-t');
     if (++t && process.argv[t] && ((typeof process.argv[t]) == 'string')) return process.argv[t];
