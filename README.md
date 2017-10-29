@@ -1,7 +1,7 @@
 # kringle
 A basic, dependency-free, Node.js web server with support for multiple hosts, security, and extensions.
 
-**NOTE:** **kringle** is a work in progress. It currently has no support for https, but will in the coming weeks. To install kringle, the simplest way is via npm:
+**NOTE:** **kringle** is a work in progress. It currently has no support for https, but will in the coming weeks. To install, the simplest way is via npm:
 ```
 npm install kringle
 ```
@@ -10,7 +10,7 @@ or
 sudo npm install --global kringle
 ```
 
-To daemonize kringle on a Unix-like OS, an init script will have to be created. This is also in the **kringle** todo queue. For now, you can manually start the server by simply running `kringle` from the command line. However, this is not particularly useful for two reasons: One, it will run in the foreground occupying your terminal window, and two, you'll have to start it up each time you want to run it--not very practical for a web server. Instead you can add the following line to your `/etc/rc.local` file to automate **kringle** at startup.
+To daemonize **kringle** on a Unix-like OS, an init script will have to be created. This is also in the **kringle** todo queue. For now, you can manually start the server by simply running `kringle` from the command line. However, this is not particularly useful for two reasons: One, it will run in the foreground occupying your terminal window, and two, you'll have to start it up each time you want to run it--not very practical for a web server. Instead you can add the following line to your `/etc/rc.local` file to automate **kringle** at startup.
 ```
 su kringleuser -c "/path/to/kringle &"
 ```
