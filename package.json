@@ -1,6 +1,6 @@
 {
   "name": "kringle",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Basic web server with support for multiple hosts, security, and extensions.",
   "bin": "./kringle",
   "scripts": {
