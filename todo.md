@@ -3,6 +3,7 @@
     2. When the file is requested, it gets added to the top of the cache. If it already exists in the cache, it is moved to the top. This way, the most popular resources are always in the cache.
     3. the `cache_size` config option defines, in megabytes, the size of the cache buffer. The default size will be set to 100MB.  
     **NOTE:** It may be a good idea to add a stickiness factor, so that files that are popular over time, as opposed to just popular since the last *x* requests, will stay at the top of the cache.
+- [ ] Cache resources acessed more frequently than x times per second, e.g. 0.016tps (times per second) = once per minute.
 - [ ] Change option for config file path to `-f` to be more consistent with other cli programs. Alternatively, the long version `--config` should also work.
 - [ ] Dynamic root path. There needs to be a way of selecting a root path automatically based on some filter. So, for example, if I access the server at `x.example.com`, I could have it set to filter on hostname and it would look at that subdomain (`x`) and direct me to a root path based purely on that variable and according to some predefined pattern. This way, you can, for example, quickly set up sandboxed hosts for testing without having to reconfigure the server. A good way to indicate in the config that you want dynamic root path for a particular host pattern, is by pointing the `root_dir` field to a path with a `@` in place of the final directory, e.g. `/srv/web/@`
 - [ ] Add HTTPS support already!
